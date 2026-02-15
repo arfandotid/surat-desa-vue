@@ -1,0 +1,578 @@
+<script setup>
+// Import icons dari lucide-vue-next
+import {
+    BarChart3,
+    PieChart,
+    TrendingUp,
+    Clock,
+    AlertCircle,
+} from "lucide-vue-next";
+
+// Import Chart.js components
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement,
+    PointElement,
+    LineElement,
+    Filler,
+} from "chart.js";
+
+// Import Vue Chart.js components
+import { Bar, Pie, Line } from "vue-chartjs";
+
+// Register Chart.js components
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend,
+    ArcElement,
+    PointElement,
+    LineElement,
+    Filler,
+);
+
+// Props
+const props = defineProps({
+    chartData: Object,
+    performance: Object,
+    statistics: Object,
+});
+
+// Data untuk chart surat per bulan (Bar Chart)
+const barChartData = {
+    labels: props.chartData?.monthly?.months || [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "Mei",
+        "Jun",
+    ],
+    datasets: [
+        {
+            label: "Surat Masuk",
+            data: props.chartData?.monthly?.incoming || [0, 0, 0, 0, 0, 0],
+            backgroundColor: "rgba(249, 115, 22, 0.8)",
+            borderColor: "rgb(249, 115, 22)",
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false,
+        },
+        {
+            label: "Surat Selesai",
+            data: props.chartData?.monthly?.completed || [0, 0, 0, 0, 0, 0],
+            backgroundColor: "rgba(34, 197, 94, 0.8)",
+            borderColor: "rgb(34, 197, 94)",
+            borderWidth: 1,
+            borderRadius: 6,
+            borderSkipped: false,
+        },
+    ],
+};
+
+const barChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: "top",
+            labels: {
+                font: {
+                    size: 12,
+                    family: "'Inter', sans-serif",
+                },
+                padding: 20,
+                usePointStyle: true,
+            },
+        },
+        tooltip: {
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            titleColor: "#1f2937",
+            bodyColor: "#4b5563",
+            borderColor: "#e5e7eb",
+            borderWidth: 1,
+            padding: 12,
+            boxPadding: 6,
+            usePointStyle: true,
+            callbacks: {
+                label: function (context) {
+                    return `${context.dataset.label}: ${context.raw} surat`;
+                },
+            },
+        },
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            grid: {
+                color: "rgba(243, 244, 246, 1)",
+            },
+            ticks: {
+                font: {
+                    size: 11,
+                },
+                color: "#6b7280",
+            },
+        },
+        x: {
+            grid: {
+                display: false,
+            },
+            ticks: {
+                font: {
+                    size: 12,
+                },
+                color: "#6b7280",
+            },
+        },
+    },
+};
+
+// Data untuk pie chart jenis surat
+const pieChartData = {
+    labels: props.chartData?.letterTypes?.labels || ["Tidak ada data"],
+    datasets: [
+        {
+            data: props.chartData?.letterTypes?.data || [1],
+            backgroundColor: props.chartData?.letterTypes?.colors || [
+                "rgba(107, 114, 128, 0.8)",
+            ],
+            borderColor: props.chartData?.letterTypes?.colors?.map((color) =>
+                color.replace("0.8", "1"),
+            ) || ["rgb(107, 114, 128)"],
+            borderWidth: 2,
+            hoverOffset: 15,
+        },
+    ],
+};
+
+const pieChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: "right",
+            labels: {
+                font: {
+                    size: 11,
+                    family: "'Inter', sans-serif",
+                },
+                padding: 15,
+                usePointStyle: true,
+                pointStyle: "circle",
+            },
+        },
+        tooltip: {
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            titleColor: "#1f2937",
+            bodyColor: "#4b5563",
+            borderColor: "#e5e7eb",
+            borderWidth: 1,
+            padding: 12,
+            boxPadding: 6,
+            callbacks: {
+                label: function (context) {
+                    const label = context.label || "";
+                    const value = context.raw || 0;
+                    const total = context.dataset.data.reduce(
+                        (a, b) => a + b,
+                        0,
+                    );
+                    const percentage =
+                        total > 0 ? Math.round((value / total) * 100) : 0;
+                    return `${label}: ${value} surat${total > 0 ? ` (${percentage}%)` : ""}`;
+                },
+            },
+        },
+    },
+};
+
+// Data untuk line chart trend surat
+const lineChartData = {
+    labels: props.chartData?.dailyTrend?.days || [
+        "Sen",
+        "Sel",
+        "Rab",
+        "Kam",
+        "Jum",
+        "Sab",
+        "Min",
+    ],
+    datasets: [
+        {
+            label: "Surat Masuk",
+            data: props.chartData?.dailyTrend?.incoming || [
+                0, 0, 0, 0, 0, 0, 0,
+            ],
+            borderColor: "rgb(249, 115, 22)",
+            backgroundColor: "rgba(249, 115, 22, 0.1)",
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: "rgb(249, 115, 22)",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            pointRadius: 4,
+        },
+        {
+            label: "Surat Diproses",
+            data: props.chartData?.dailyTrend?.processed || [
+                0, 0, 0, 0, 0, 0, 0,
+            ],
+            borderColor: "rgb(59, 130, 246)",
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            fill: true,
+            tension: 0.4,
+            pointBackgroundColor: "rgb(59, 130, 246)",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            pointRadius: 4,
+        },
+    ],
+};
+
+const lineChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            position: "top",
+            labels: {
+                font: {
+                    size: 12,
+                    family: "'Inter', sans-serif",
+                },
+                padding: 20,
+                usePointStyle: true,
+            },
+        },
+        tooltip: {
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            titleColor: "#1f2937",
+            bodyColor: "#4b5563",
+            borderColor: "#e5e7eb",
+            borderWidth: 1,
+            padding: 12,
+            boxPadding: 6,
+            mode: "index",
+            intersect: false,
+        },
+    },
+    scales: {
+        y: {
+            beginAtZero: true,
+            grid: {
+                color: "rgba(243, 244, 246, 1)",
+            },
+            ticks: {
+                font: {
+                    size: 11,
+                },
+                color: "#6b7280",
+            },
+        },
+        x: {
+            grid: {
+                color: "rgba(243, 244, 246, 1)",
+            },
+            ticks: {
+                font: {
+                    size: 12,
+                },
+                color: "#6b7280",
+            },
+        },
+    },
+    interaction: {
+        intersect: false,
+        mode: "index",
+    },
+};
+
+// Data untuk horizontal bar chart status surat
+const horizontalBarData = {
+    labels: props.chartData?.statuses?.labels || [
+        "Menunggu",
+        "Diproses",
+        "Selesai",
+        "Ditolak",
+    ],
+    datasets: [
+        {
+            label: "Jumlah Surat",
+            data: props.chartData?.statuses?.data || [0, 0, 0, 0],
+            backgroundColor: props.chartData?.statuses?.colors || [
+                "rgba(234, 179, 8, 0.8)",
+                "rgba(59, 130, 246, 0.8)",
+                "rgba(34, 197, 94, 0.8)",
+                "rgba(239, 68, 68, 0.8)",
+            ],
+            borderColor: props.chartData?.statuses?.colors?.map((color) =>
+                color.replace("0.8", "1"),
+            ) || [
+                "rgb(234, 179, 8)",
+                "rgb(59, 130, 246)",
+                "rgb(34, 197, 94)",
+                "rgb(239, 68, 68)",
+            ],
+            borderWidth: 1,
+            borderRadius: 6,
+        },
+    ],
+};
+
+const horizontalBarOptions = {
+    indexAxis: "y",
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+        legend: {
+            display: false,
+        },
+        tooltip: {
+            backgroundColor: "rgba(255, 255, 255, 0.95)",
+            titleColor: "#1f2937",
+            bodyColor: "#4b5563",
+            borderColor: "#e5e7eb",
+            borderWidth: 1,
+            padding: 12,
+            boxPadding: 6,
+            callbacks: {
+                label: function (context) {
+                    return `${context.raw} surat`;
+                },
+            },
+        },
+    },
+    scales: {
+        x: {
+            beginAtZero: true,
+            grid: {
+                color: "rgba(243, 244, 246, 1)",
+            },
+            ticks: {
+                font: {
+                    size: 11,
+                },
+                color: "#6b7280",
+                callback: function (value) {
+                    return value;
+                },
+            },
+        },
+        y: {
+            grid: {
+                display: false,
+            },
+            ticks: {
+                font: {
+                    size: 12,
+                    weight: "500",
+                },
+                color: "#4b5563",
+            },
+        },
+    },
+};
+
+// Hitung total surat untuk pie chart
+const totalSuratForPie = pieChartData.datasets[0].data.reduce(
+    (a, b) => a + b,
+    0,
+);
+
+// Hitung puncak aktivitas untuk line chart
+const maxIncoming = Math.max(...lineChartData.datasets[0].data);
+const maxIncomingIndex = lineChartData.datasets[0].data.indexOf(maxIncoming);
+const peakDay = lineChartData.labels[maxIncomingIndex];
+
+// Hitung rata-rata surat per hari
+const avgDaily =
+    lineChartData.datasets[0].data.reduce((a, b) => a + b, 0) /
+    lineChartData.datasets[0].data.length;
+</script>
+
+<template>
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 gap-6 mb-8 lg:grid-cols-2">
+        <!-- Chart 1: Bar Chart - Tren Surat Per Bulan -->
+        <div class="p-6 bg-white rounded-xl shadow-sm">
+            <div
+                class="flex items-center justify-between mb-6 border-b border-gray-200 pb-3"
+            >
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        Tren Surat Per Bulan
+                    </h3>
+                    <p class="text-sm text-gray-600">
+                        Perbandingan surat masuk vs selesai
+                    </p>
+                </div>
+                <BarChart3 class="w-6 h-6 text-blue-600" />
+            </div>
+
+            <div class="h-64">
+                <Bar :data="barChartData" :options="barChartOptions" />
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center">
+                            <div
+                                class="w-3 h-3 mr-2 bg-orange-500 rounded-full"
+                            ></div>
+                            <span class="text-sm text-gray-600"
+                                >Surat Masuk</span
+                            >
+                        </div>
+                        <div class="flex items-center">
+                            <div
+                                class="w-3 h-3 mr-2 bg-green-500 rounded-full"
+                            ></div>
+                            <span class="text-sm text-gray-600"
+                                >Surat Selesai</span
+                            >
+                        </div>
+                    </div>
+                    <div
+                        :class="`flex items-center text-sm ${statistics?.suratSelesaiBulanIni > 0 ? 'text-green-600' : 'text-gray-600'}`"
+                    >
+                        <TrendingUp class="w-4 h-4 mr-1" />
+                        {{ statistics?.suratSelesaiBulanIni || 0 }} bulan ini
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 2: Pie Chart - Distribusi Jenis Surat -->
+        <div class="p-6 bg-white rounded-xl shadow-sm">
+            <div
+                class="flex items-center justify-between mb-6 border-b border-gray-200 pb-3"
+            >
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        Distribusi Jenis Surat
+                    </h3>
+                    <p class="text-sm text-gray-600">
+                        Persentase berdasarkan jenis surat
+                    </p>
+                </div>
+                <PieChart class="w-6 h-6 text-purple-600" />
+            </div>
+
+            <div class="h-64">
+                <Pie :data="pieChartData" :options="pieChartOptions" />
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                        Total
+                        <span class="font-semibold text-gray-900"
+                            >{{ totalSuratForPie }} surat</span
+                        >
+                        terdata
+                    </div>
+                    <div
+                        v-if="pieChartData.labels.length > 1"
+                        class="text-sm text-blue-600 font-medium"
+                    >
+                        {{ pieChartData.labels[0] }} dominan
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Row Charts -->
+    <div class="grid grid-cols-1 gap-6 mb-8 lg:grid-cols-2">
+        <!-- Chart 3: Line Chart - Trend Harian -->
+        <div class="p-6 bg-white rounded-xl shadow-sm">
+            <div
+                class="flex items-center justify-between mb-6 border-b border-gray-200 pb-3"
+            >
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        Aktivitas Surat Harian
+                    </h3>
+                    <p class="text-sm text-gray-600">Trend surat minggu ini</p>
+                </div>
+                <TrendingUp class="w-6 h-6 text-orange-600" />
+            </div>
+
+            <div class="h-64">
+                <Line :data="lineChartData" :options="lineChartOptions" />
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                        <template v-if="maxIncoming > 0">
+                            Puncak:
+                            <span class="font-semibold text-gray-900"
+                                >{{ peakDay }} ({{ maxIncoming }} surat)</span
+                            >
+                        </template>
+                        <template v-else> Tidak ada aktivitas </template>
+                    </div>
+                    <div class="flex items-center text-sm text-blue-600">
+                        <Clock class="w-4 h-4 mr-1" />
+                        Rata-rata {{ avgDaily.toFixed(1) }} surat/hari
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart 4: Horizontal Bar - Status Surat -->
+        <div class="p-6 bg-white rounded-xl shadow-sm">
+            <div
+                class="flex items-center justify-between mb-6 border-b border-gray-200 pb-3"
+            >
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900">
+                        Status Surat Saat Ini
+                    </h3>
+                    <p class="text-sm text-gray-600">
+                        Distribusi status surat terbaru
+                    </p>
+                </div>
+                <AlertCircle class="w-6 h-6 text-yellow-600" />
+            </div>
+
+            <div class="h-64">
+                <Bar
+                    :data="horizontalBarData"
+                    :options="horizontalBarOptions"
+                />
+            </div>
+
+            <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+                <div class="flex items-center">
+                    <Clock class="w-5 h-5 mr-3 text-blue-600" />
+                    <div>
+                        <p class="text-sm font-medium text-blue-900">
+                            Rata-rata waktu proses:
+                            {{ performance?.avgProcessingTime || 0 }} hari
+                        </p>
+                        <p
+                            v-if="performance?.completionRate > 0"
+                            class="text-xs text-blue-700"
+                        >
+                            Tingkat penyelesaian:
+                            {{ performance?.completionRate }}%
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
