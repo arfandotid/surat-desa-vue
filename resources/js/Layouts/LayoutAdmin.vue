@@ -60,9 +60,11 @@ const handleDropdownItemClick = () => {
 
 // Cek apakah route saat ini adalah create atau edit letter template
 const isLetterTemplateCreateOrEdit = () => {
+    const path = currentPath.value;
+
     return (
-        currentPath.value.startsWith("/admin/letter-templates/create") ||
-        currentPath.value.includes("/admin/letter-templates/edit/")
+        path === "/admin/letter-templates/create" ||
+        /^\/admin\/letter-templates\/[^/]+\/edit$/.test(path)
     );
 };
 
