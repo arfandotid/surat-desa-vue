@@ -93,3 +93,10 @@ Route::post('/login', [\App\Http\Controllers\Web\Auth\LoginController::class, 's
 
 // Route logout resident
 Route::post('/logout', [\App\Http\Controllers\Web\Auth\LoginController::class, 'logout'])->name('logout');
+
+// Group untuk resident yang sudah login
+Route::middleware('auth:resident')->group(function () {
+
+    // Dashboard resident
+    Route::get('/dashboard', [\App\Http\Controllers\Web\DashboardController::class, 'index'])->name('resident.dashboard.index');
+});
