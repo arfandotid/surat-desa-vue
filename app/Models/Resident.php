@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Resident extends Model
+class Resident extends Authenticatable
 {
     protected $fillable = [
         'nik',

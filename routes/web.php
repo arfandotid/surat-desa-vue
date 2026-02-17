@@ -80,3 +80,16 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->name('letter-completeds.print');
     });
 });
+
+// ==============================================
+// ROUTES UNTUK RESIDENT (PENDUDUK)
+// ==============================================
+
+// Route login resident
+Route::get('/login', [\App\Http\Controllers\Web\Auth\LoginController::class, 'index'])->name('login');
+
+// Route proses login resident
+Route::post('/login', [\App\Http\Controllers\Web\Auth\LoginController::class, 'store'])->name('login.store');
+
+// Route logout resident
+Route::post('/logout', [\App\Http\Controllers\Web\Auth\LoginController::class, 'logout'])->name('logout');
