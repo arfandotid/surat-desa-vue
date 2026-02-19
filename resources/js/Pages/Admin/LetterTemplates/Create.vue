@@ -288,11 +288,9 @@ const handleSubmit = (e) => {
                                             <code
                                                 class="px-2 py-1 bg-white border rounded text-red-600"
                                             >
-                                                &#123;&#123;
-                                                {{
+                                                &#123;&#123;{{
                                                     field?.key || "key"
-                                                }}
-                                                &#125;&#125;
+                                                }}&#125;&#125;
                                             </code>
                                             di template surat untuk menampilkan
                                             data ini
