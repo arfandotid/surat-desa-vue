@@ -11,10 +11,10 @@
     <pre><code>cp .env.example .env</code></pre>
 3.  Generate App Key
     <pre><code>php artisan key:generate</code></pre>
-4.  Create Database
-    <pre><code>php artisan migrate</code></pre>
+4.  Create Database & run seeder
+    <pre><code>php artisan migrate --seed</code></pre>
 5.  Run Server <br/>
     Laravel :
     <pre><code>php artisan serve</code></pre>
-    React :
+    Vue :
     <pre><code>npm run dev</code></pre>
